@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Recomendaciones de Productos</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.1.3/css/bootstrap.min.css">
+</head>
+<body>
+    <div class="container mt-5">
+        <h1>Recomendaciones de Productos</h1>
+        <div class="mb-3">
+            <label for="search_option" class="form-label">Seleccione opción de búsqueda:</label>
+            <select class="form-select" id="search_option">
+                <option value="Embeddings Auto/TSNE">Embeddings Auto/TSNE</option>
+                <option value="Embeddings TSNE">Embeddings TSNE</option>
+                <option value="Embeddings NMF">Embeddings NMF</option>
+                <option value="Embeddings PCA">Embeddings PCA</option>
+                <option value="Sin embeddings" selected>Sin embeddings</option>
+            </select>
+        </div>
+        <div class="mb-3">
+            <label for="product_code_or_name" class="form-label">Ingrese el código o nombre del producto</label>
+            <input type="text" class="form-control" id="product_code_or_name" placeholder="Código o nombre del producto">
+        </div>
+        <button class="btn btn-primary" id="search_btn">Buscar</button>
+        <h2 class="mt-4">Producto buscado:</h2>
+        <div id="reference_info" class="mb-4"></div>
+        <h2 class="mt-4">Productos recomendados:</h2>
+        <ul id="suggestions" class="list-group mt-3"></ul>
+    </div>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script>
+        $(document).ready(function(){
+            $("#search_btn").click(function(){
+                var productCodeOrName = $("#product_code_or_name").val();
+                var searchOption = $("#search_option").val();
+                $.ajax({
+                    url: "/search",
+                    method: "POST",
+                    contentType: "application/json",
+                    data: JSON.stringify({ "product_code_or_name": productCodeOrName, "search_option": searchOption }),
+                    success: function(response) {
+                        $("#reference_info").empty();
+                        $("#suggestions").empty();
+                        if(response.error){
+                            $("#reference_info").append('<p class="text-danger">' + response.error + '</p>');
+                        } else {
+                            if(response.reference_count !== null){
+                                $("#reference_info").append('<p>El producto buscado fue comprado ' + response.reference_count + ' veces</p>');
+                                $("#reference_info").append('<p>Descripción completa: ' + response.reference_full_description + '</p>');
+                            }
+                            if(response.suggestions.length > 0){
+                                response.suggestions.forEach(function(product){
+                                    if(product.codigo){
+                                        $("#suggestions").append('<li class="list-group-item"><strong>Código: ' + product.codigo + '</strong> - ' + product.nombre + '<br>' +
+                                        product.description + '<br>' + product.price);
+                                    } else {
+                                        $("#suggestions").append('<li class="list-group-item"><strong>' + product.name + '</strong><br>' + product.description + '<br>' + product.price + '<br>Comprado: ' + product.count + ' veces</li>');
+                                    }
+                                });
+                            } else {
+                                $("#suggestions").append('<li class="list-group-item">No se encontraron recomendaciones.</li>');
+                            }
+                        }
+                    }
+                });
+            });
+        });
+    </script>
+</body>
+</html>
