@@ -4,11 +4,13 @@ from collections import Counter
 
 app = Flask(__name__)
 
-df = pd.read_csv("datos_farmacia_procesados.csv", low_memory=False)
+df = pd.read_csv("datos_procesados.csv", low_memory=False)
 
 codigo_a_nombre = dict(zip(df['codigo'], df['nombre']))
 codigo_a_descripcion = dict(zip(df['codigo'], df['descripcion']))
 codigo_a_precio = dict(zip(df['codigo'], df['ImporteCoste']))
+
+df = df.groupby('IdVenta').agg(list).reset_index()
 
 unique_codes = set()
 for codes in df['codigo']:
